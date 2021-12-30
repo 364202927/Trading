@@ -1,7 +1,7 @@
-import ccxt,time
+import ccxt #,time
 from information import information
 from util.pdData import pdData
-from util.utilities import iso2Time,date2Time,time2Iso,midReplace,isDapi
+from util.utilities import *
 
 tf_Transform = {'1m': '60',
             '3m': '180',
@@ -42,45 +42,10 @@ class baseExchange:
 			'enableRateLimit': True,
 		})
 
-    #全部币的历史数据
-	def _pull(self, symbolTab:list, timeTab:list, start_time:str, funcSymbolData, saveName:str = ''):
-		fileInfo = None
-		errorsList = []
-		for symbol in symbolTab:
-			for timeFrame in timeTab:
-				if saveName != '':
-					fileInfo = [self.name(), saveName,start_time[:4]]
-					fileInfo.append(midReplace(symbol)+"_"+timeFrame)
-				symbolData = funcSymbolData(symbol, timeFrame, fileInfo)
-				if len(symbolData) == 0:
-					errorsList.append(midReplace(symbol)+"_"+timeFrame)  #todo:bug日期还是要的，可能会覆盖掉文件
-					continue
-				time.sleep(0.1)
-		if len(errorsList) > 0:
-			print("~~~~错误列表~~~~", errorsList)
-
-    #获取一只币报价数据
-	def _getSymbolData(self, symbol:str, frame:str, beginTime:str, end_time:str, limit:int, compFunc, isFuture = False):
-		historyKlineFunc = self._historyKline
-		if isFuture:
-			historyKlineFunc = self._fhistoryKline
-        # print("~~~获取数据~~",symbol, frame)
-		allData = []
-		while True:
-			data = historyKlineFunc(symbol=symbol, timeframe=frame,since = str(beginTime), endTime = str(end_time),  limit=limit)
-			if len(data) == 0:
-				return allData
-			allData.append(data)
-			beginTime, end_time, isOver = compFunc(symbol, data)
-			if isOver:
-				break;
-			time.sleep(0.5)
-		return allData
-
 	#检测市场全数据
-	def _sMarkets(self):
+	def sMarkets(self):
 		return self._ex.load_markets()
-	def _fMarkets(self, isDapi = False):
+	def fMarkets(self, isDapi = False):
 		symbols = []
 		def binance():
 			if isDapi:  #币本位
